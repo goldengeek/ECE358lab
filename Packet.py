@@ -5,13 +5,12 @@ Created on Sep 22, 2014
 '''
 
 class Packet(object):
-    '''
-    classdocs
-    '''
 
-
-    def __init__(self, params):
-        '''
-        Constructor
-        '''
+    def __init__(self, generatedAt, serviceTime):
+        self.generatedAt = generatedAt
+        self.serviceTime = serviceTime
+        
+        
+    def genAt(self, tickGenerated):
+        self.generatedAt = tickGenerated
         

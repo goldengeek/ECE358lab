@@ -8,20 +8,17 @@ from Generator import Generator
 from Packet import Packet
 from PacketQueue import PacketQueue
 from PacketService import PacketService
+from Ticker import Ticker
 import time
-from threading import Timer
-
-generator = Generator()
-
-def print_time():
-    print time.time()
-
-def ticker():
-    while True:
-        print time.time()
-        Timer(5,generator.updateTick,()).start()
+from threading import Timer, Event
 
 
 if __name__ == '__main__':
-    ticker()
-    pass
+    packetsPerSec = 100
+    packetQueue = PacketQueue(100) 
+    packetService = PacketService(packetQueue)
+    generator = Generator(packetQueue, packetsPerSec)
+    stopFlag = Event()
+    thread = Ticker(stopFlag, generator, packetService)
+    thread.start()
+    
