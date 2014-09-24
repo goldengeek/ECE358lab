@@ -45,7 +45,7 @@ class PacketService(object):
             
     def getData(self):
         serverIdlePercent = float(self.idleCount)/float(self.tickerCount)
+        aveSojournTime = 0        
         if self.packetServed != 0:
             aveSojournTime = float(self.sojournTimeSum)/self.packetServed
-        aveSojournTime = 0        
         return (serverIdlePercent, aveSojournTime)

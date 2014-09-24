@@ -60,9 +60,7 @@ if __name__ == '__main__':
         sizeOfQueue = 0
         
     packetServiceTime = (float(lengthOfPacketInBits)/(serviceSpeed))*(1.0/secPerTick)
-    print "length of packet in bit", lengthOfPacketInBits
-    print "service speed", serviceSpeed
-    print "seconds per tic", secPerTick
+
     print 'service time in tick', packetServiceTime
     if packetServiceTime ==0:
         packetService =10
