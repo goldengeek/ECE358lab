@@ -67,7 +67,7 @@ if __name__ == '__main__':
     
     packetQueue = PacketQueue(sizeOfQueue) 
     packetService = PacketService(packetQueue)
-    generator = Generator(packetQueue, packetsPerSec, packetServiceTime)
+    generator = Generator(packetQueue, packetsPerSec, packetServiceTime, secPerTick)
     
     stopFlag = Event()
     thread = Ticker(stopFlag, generator, packetService, packetQueue,args.TICKS,secPerTick, rounds)
