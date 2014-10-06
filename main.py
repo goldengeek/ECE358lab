@@ -20,6 +20,20 @@ def isNum (str):
         return True
     else:
         return False
+    
+def collectData(geneartor, packetQueue, packetService):
+        totalGeneratedPackets, totalGenTicks = generator.getData()
+        totalDroppedPackets, aveQueueLength, aveQueueFullness = packetQueue.getData()
+        serverIdlePercent, aveSojournTime = packetService.getData()    
+        
+        print '-'*60
+        print "Total number of packet Generated in {0} ticks are: {1}".format(totalGenTicks,totalGeneratedPackets)
+        print "Total Packets Dropped: {0}".format(totalDroppedPackets)
+        print "Percent of Dropped packet: {0} %".format(float(totalDroppedPackets)*100/totalGeneratedPackets)
+        print "Average Queue Length: {0}".format(aveQueueLength)
+        print "Average Queue Fullness: {0} %".format(aveQueueFullness*100)
+        print "Average Idle percent: {0} %".format(serverIdlePercent*100)
+        print "Average Sojourn Time per packet in ticks: {0}".format(aveSojournTime)
 
 if __name__ == '__main__':
     
@@ -69,9 +83,18 @@ if __name__ == '__main__':
     packetService = PacketService(packetQueue)
     generator = Generator(packetQueue, packetsPerSec, packetServiceTime, secPerTick)
     
-    stopFlag = Event()
-    thread = Ticker(stopFlag, generator, packetService, packetQueue,args.TICKS,secPerTick, rounds)
-    thread.start()
+    for m in range(0,rounds):
+        for i in range(0,args.TICKS):
+            generator.updateTick()
+            packetQueue.updateTick()
+            packetService.updateTick()
+        collectData(generator, packetQueue, packetService)
+        
+        
+    
+    #stopFlag = Event()
+    #thread = Ticker(stopFlag, generator, packetService, packetQueue,args.TICKS,secPerTick, rounds)
+    #thread.start()
     
         
     
