@@ -96,6 +96,7 @@ class Medium(object):
                 self.active = True
                 self.JamState = True
                 self.collisionCount +=1
+                self.collision = False
     def isMediumIdle(self, position):
         if self.JamState:
             return False
