@@ -16,7 +16,6 @@ class Medium(object):
         self.lengthOfWireInNodes = lengthOfWireInNodes
         self.nodeTransmitPos = 0
         self.propSpeed = 200000000
-        #self.propSpeed = 100
         self.propTime =(10.0/self.propSpeed)*(1.0/secPerTick)
         self.secPerTick = secPerTick
         self.speedOfLan = speedOfLan
@@ -48,12 +47,33 @@ class Medium(object):
         if self.active == True:
             for b in range(len(self.packetsInLan)):
                 self.propCount[b]+=1
-                if self.propCount[b] < self.propTime:
+                if self.propCount[b] > self.propTime:
                     self.pLeft[b] -= int(self.propCount[b]/self.propTime)
                     self.pRight[b] += int(self.propCount[b]/self.propTime)
+                    #print  int(self.propCount[b]/self.propTime), self.propCount[b], self.propTime
                     self.propCount[b] = 0
             
-                 
+            #Check for collisions
+            for i in range(len(self.packetsInLan)):
+                for b in range (len(self.packetsInLan)):
+                    if b == i:
+                        continue
+                    #print self.position[i], self.pLeft[b], self.pRight[b]
+                    if self.position[i] >= self.pLeft[b] and self.position[i] <= self.pRight[b]:
+                        self.collision = True
+            if self.collision:
+                #print "MED COLLIDE"
+                self.position = []
+                self.pLeft = []
+                self.pRight = []
+                self.propCount = []
+                self.packetsInLan = []
+                self.packetFinishTime = []
+                self.active = True
+                self.JamState = True
+                self.collisionCount +=1
+                self.collision = False
+                self.waitLenght = 0
             i = 0
             while i <len(self.packetsInLan):
             #for i in range(len(self.packetsInLan)):
@@ -61,6 +81,7 @@ class Medium(object):
                 #if self.packetFinishTime[i]>=self.tickCount:
                 #print len(self.packetsInLan)
                 while len(self.packetsInLan)>0 and i<len(self.packetsInLan) and self.packetFinishTime[i]<=self.tickCount:
+
                     #print len(self.packetFinishTime),len(self.packetsInLan), i
                     #print type(self.packetsInLan[i])
                     #print len(self.packetsInLan)
@@ -79,24 +100,7 @@ class Medium(object):
                         self.active = False
                 i +=1
             #print len(self.packetsInLan)
-            for i in range(len(self.packetsInLan)):
-                for b in range (len(self.packetsInLan)):
-                    if b == i:
-                        pass
-                    #print self.position[i], self.pLeft[b], self.pRight[b]
-                    if self.position[i] >= self.pLeft[b] and self.position[i] <= self.pRight[b]:
-                        self.collision = True
                         
-            if self.collision:
-                self.position = []
-                self.pLeft = []
-                self.pRight = []
-                self.propCount = []
-                self.packetsInLan = []
-                self.active = True
-                self.JamState = True
-                self.collisionCount +=1
-                self.collision = False
     def isMediumIdle(self, position):
         if self.JamState:
             return False
@@ -107,16 +111,12 @@ class Medium(object):
     
     def transmit(self,position, packet):
         self.active = True
-        #self.nodeTransmitPos 
-        #self.pleft = position
-        #self.pright = position
         self.pLeft.append(position)
         self.pRight.append(position)
         self.position.append(position)
         self.packetsInLan.append(packet)
-        #packetEndTime = (float(position*10)/float(self.speedOfLan))+float(packet.length)/float(self.speedOfLan)*(1.0/self.secPerTick)
-        #packetEndTime = (float(position*10)/float(self.speedOfLan))+float(1500)/float(self.speedOfLan)*(1.0/self.secPerTick)
-        packetEndTime = (float(max(position*10, self.lengthOfWireInNodes*10-position*10))/float(self.propSpeed))+(float(1500)/float(self.speedOfLan))
+        #packetEndTime = (float(max(position*10, self.lengthOfWireInNodes*10-position*10))/float(self.propSpeed))+(float(1500*8)/float(self.speedOfLan))
+        packetEndTime = (float(self.lengthOfWireInNodes*10)/float(self.propSpeed))+(float(1500*8)/float(self.speedOfLan))
         self.packetFinishTime.append(packetEndTime*(1.0/self.secPerTick)+self.tickCount)
         #print packetEndTime*(1.0/self.secPerTick)+self.tickCount, self.tickCount
         self.propCount.append(0)
@@ -127,7 +127,13 @@ class Medium(object):
         sum =0
         for delay in self.packetDelayTime:
             sum += delay
-        print "Average Delay in ticks is {0}".format(sum/len(self.packetDelayTime))
-        
-    
+        if len(self.packetDelayTime) != 0:
+            print "Average Delay in ticks is {0}".format(sum/len(self.packetDelayTime))
+        else:
+            print "Average Delay in ticks is {0}".format('infty')
+            
+    def didCollide(self):
+        #if self.collision:
+            #print "returning ", self.collision
+        return self.JamState
         

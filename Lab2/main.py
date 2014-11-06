@@ -66,9 +66,9 @@ if __name__ == '__main__':
     
     count = 0
     for i in range(int(ticks)):
+        medium.updateTick()
         for node in nodes:
             node.updateTick()
-        medium.updateTick()
         if i % 1000000 == 0:
             print "{0} Million Ticks Are done".format(count)
             count +=1

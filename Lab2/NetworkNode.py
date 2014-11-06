@@ -10,6 +10,7 @@ from math import log
 from Packet import Packet
 from Medium import Medium
 
+
 class NetworkNode(object):
     def __init__(self,medium, sendingProb, packetsPerSec, secPerTick, position):
         self.sendingProb = sendingProb
@@ -22,6 +23,7 @@ class NetworkNode(object):
         self.genNextPacketAt = self.computeNextPacketTick()
         self.packetQueue = []
         self.medium = medium
+        self.prevTR = 0
         
         self.waitState = False
         self.waitLength = 0
@@ -48,6 +50,7 @@ class NetworkNode(object):
             return
         if self.waitState and self.waitLength <=0:
             self.waitState = False
+            self.waitLength = 0
           
         if self.state == 0 and len(self.packetQueue)>0:
             self.failCount = 0
@@ -57,6 +60,10 @@ class NetworkNode(object):
             if not self.isMediumIdle():
                 #chceck state, its not going in to BEB
                 self.mediumIdleCount = 0
+                if self.sendingProb == 0:
+                    self.waitState = True
+                    self.state = 1
+                    self.waitLength = self.prevTR
                 if self.state == 3:
                     self.state = 1 
                     self.BEB()
@@ -69,8 +76,11 @@ class NetworkNode(object):
             self.recieveDataFromUpperLayer()
         elif self.state == 5 and self.waitLength >0:
             self.waitLength -=1
-            if self.medium.collision:
+            #if self.medium.collision:
+            if self.medium.didCollide():
+                #print "NODE COLLIDE"
                 self.state = 6
+                self.waitLength = 0
                 self.SendJamingSignal()
         elif self.state == 5 and self.waitLength <=0:
             #YAY no collision
@@ -93,7 +103,7 @@ class NetworkNode(object):
     
            
     def genPacket(self):
-        packet = Packet(self.tickCount, 1500, self.position)
+        packet = Packet(self.tickCount, 1500*8, self.position)
         self.packetQueue.append(packet)
         #if (self.state == 0) and len(self.packetQueue) >0:
             #self.sendingPacket = self.packetQueue[0]
@@ -104,20 +114,17 @@ class NetworkNode(object):
         #print 'In Recieved Data From Upper Layer. Current State is {0}'.format(self.state)
         #self.failCount = 0
         #self.state = 0
-        while(True):
+        #while(True):
             if self.state == 0:
                 self.state = 1
-                break
+                #break
             #if self.isMediumIdle():
             if self.state == 2 or self.state == 4:
                 randNum = random.uniform(0,1)
                 #CHECK THIS, should be oppsoite
-                if randNum < self.sendingProb or self.sendingProb == 1:
+                if randNum < self.sendingProb or self.sendingProb == 1 or self.sendingProb == 0:
                     self.transmitData()
-                    break
-                elif self.sendingProb == 0:
-                    self.state = 1
-                    self.BEB()
+                    #break
                 else:
                     if self.state == 2:
                         self.waitOneSlot()
@@ -125,7 +132,7 @@ class NetworkNode(object):
                     if self.state == 4:
                         self.state = 1
                         self.BEB()
-                    break
+                    #break
                 
     def transmitData(self):
         #print 'Transmitting packet on to medium. Current State is {0}'.format(self.state)
@@ -135,7 +142,7 @@ class NetworkNode(object):
         self.medium.transmit(self.position, self.sendingPacket)
         self.state = 5 #check for collision
         #self.waitLength = (float(self.sendingPacket.length)/float(self.medium.speedOfLan))*(1.0/self.secPerTick)
-        self.waitLength = (float(1500)/float(self.medium.speedOfLan))*(1.0/self.secPerTick)
+        self.waitLength = (float(1500*8)/float(self.medium.speedOfLan))*(1.0/self.secPerTick)
         
         #Fifure  out if we are sending to position 0, 1 or whatever..
     
@@ -151,7 +158,10 @@ class NetworkNode(object):
             return
         self.waitState = True
         randNum = random.uniform(0, math.pow(2, self.failCount-1))
-        self.waitLength = randNum*self.bitTime1
+        self.waitLength = randNum*self.bitTime1*512
+        #print self.waitLength
+        self.prevTR = self.waitLength
+        #print self.waitLength
     
     def SendJamingSignal(self):
         self.waitState = True
